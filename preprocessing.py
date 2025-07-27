@@ -40,3 +40,23 @@ df_scaled['industry'] = df['industry']
 df_scaled['SIC_code (2007)'] = df['SIC_code (2007)']
 
 print(df_scaled)
+
+# Exploratory Data Analysis
+
+df.describe()
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+for col in numeric_cols:
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(x='industry', y=col, data=df)
+    plt.xticks(rotation=90)
+    plt.title(f'{col} by Industry')
+    plt.show()
+
+for col in numeric_cols:
+    plt.figure(figsize=(6, 4))
+    sns.histplot(df[col], kde=True, bins=15)
+    plt.title(f'Distribution of {col}')
+    plt.show()
