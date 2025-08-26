@@ -39,3 +39,10 @@ plt.show()
 
 # Check missing values
 print(full_data.isnull().sum())
+
+# Visualise distribution of numeric columns
+for col in numeric_cols:
+    plt.figure(figsize=(6, 4))
+    sns.histplot(full_data[col], kde=True, bins=15)
+    plt.title(f'Distribution of {col}')
+    plt.show()
