@@ -29,3 +29,10 @@ numeric_cols = [
 ]
 
 print(full_data.dtypes)
+
+# Visualise correlation matrix
+corr_matrix = full_data.drop(columns=['industry','sic_code']).corr()
+plt.figure(figsize=(8, 6))
+sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f")
+plt.title("Correlation Matrix")
+plt.show()
