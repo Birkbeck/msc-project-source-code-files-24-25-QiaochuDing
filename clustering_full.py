@@ -49,7 +49,7 @@ for col in numeric_cols:
 
 # Impute missing values with median
 full_data[numeric_cols] = full_data[numeric_cols].fillna(full_data[numeric_cols].median())
-full_data.head()
+print(full_data.head())
 
 # Plot bar charts for numeric columns by industry
 for col in numeric_cols:
