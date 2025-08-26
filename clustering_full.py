@@ -46,3 +46,17 @@ for col in numeric_cols:
     sns.histplot(full_data[col], kde=True, bins=15)
     plt.title(f'Distribution of {col}')
     plt.show()
+
+# Impute missing values with median
+full_data[numeric_cols] = full_data[numeric_cols].fillna(full_data[numeric_cols].median())
+full_data.head()
+
+# Plot bar charts for numeric columns by industry
+for col in numeric_cols:
+    plt.figure(figsize=(20, 8))
+    sorted_data = full_data.sort_values(by=col, ascending=False)
+    sns.barplot(x='industry', y=col, data=sorted_data)
+    plt.title(f'{col} by Industry')
+    plt.xticks(rotation=90)
+    plt.show()
+
