@@ -150,3 +150,15 @@ kmeans_8 = KMeans(n_clusters=8, init='k-means++', random_state=42, n_init=10)
 clusters_8 = kmeans_8.fit_predict(X)
 davies_bouldin_8 = davies_bouldin_score(X, clusters_8)
 print(f"Davies-Bouldin Index for 8 clusters: {davies_bouldin_8}")
+
+# KMeans clustering with 8 clusters and print industries in each cluster
+kmeans = KMeans(n_clusters=8, init='k-means++', random_state=42, n_init=10)
+kmeans.fit(X_scaled)
+full_data['cluster_label'] = kmeans.labels_
+
+for cluster_id in sorted(full_data['cluster_label'].unique()):
+    industries_in_cluster = full_data[full_data['cluster_label'] == cluster_id]['industry'].tolist()
+    print(f"Cluster {cluster_id}:")
+    for industry in industries_in_cluster:
+        print(f"- {industry}")
+    print("\n")
