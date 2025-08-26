@@ -127,3 +127,26 @@ plt.xlabel('Principal Component 1')
 plt.ylabel('Principal Component 2')
 plt.grid(True)
 plt.show()
+
+# Davies-Bouldin Index for other cluster options
+X = full_data[numeric_cols]
+
+kmeans_5 = KMeans(n_clusters=5, init='k-means++', random_state=42, n_init=10)
+clusters_5 = kmeans_5.fit_predict(X)
+davies_bouldin_5 = davies_bouldin_score(X, clusters_5)
+print(f"Davies-Bouldin Index for 5 clusters: {davies_bouldin_5}")
+
+kmeans_6 = KMeans(n_clusters=6, init='k-means++', random_state=42, n_init=10)
+clusters_6 = kmeans_6.fit_predict(X)
+davies_bouldin_6 = davies_bouldin_score(X, clusters_6)
+print(f"Davies-Bouldin Index for 6 clusters: {davies_bouldin_6}")
+
+kmeans_7 = KMeans(n_clusters=7, init='k-means++', random_state=42, n_init=10)
+clusters_7 = kmeans_7.fit_predict(X)
+davies_bouldin_7 = davies_bouldin_score(X, clusters_7)
+print(f"Davies-Bouldin Index for 7 clusters: {davies_bouldin_7}")
+
+kmeans_8 = KMeans(n_clusters=8, init='k-means++', random_state=42, n_init=10)
+clusters_8 = kmeans_8.fit_predict(X)
+davies_bouldin_8 = davies_bouldin_score(X, clusters_8)
+print(f"Davies-Bouldin Index for 8 clusters: {davies_bouldin_8}")
