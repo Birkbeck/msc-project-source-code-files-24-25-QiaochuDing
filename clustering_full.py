@@ -109,3 +109,21 @@ for cluster_id in sorted(full_data['cluster_label'].unique()):
     for industry in industries_in_cluster:
         print(f"- {industry}")
     print("\n")
+
+# Print mean of numeric columns for each cluster
+cluster_means = full_data.groupby('cluster_label')[numeric_cols].mean()
+print(cluster_means)
+
+# PCA to visualise clusters in 2D space
+pca = PCA(n_components=2)
+principal_components = pca.fit_transform(full_data[numeric_cols])
+principal_df = pd.DataFrame(data = principal_components, columns = ['principal component 1', 'principal component 2'])
+principal_df['cluster_label'] = full_data['cluster_label']
+
+plt.figure(figsize=(10, 8))
+sns.scatterplot(x='principal component 1', y='principal component 2', hue='cluster_label', data=principal_df, palette='viridis', s=100)
+plt.title('PCA of Clusters')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.grid(True)
+plt.show()
