@@ -68,3 +68,32 @@ print(summary_stats)
 scaler = StandardScaler()
 full_data[numeric_cols] = scaler.fit_transform(full_data[numeric_cols])
 print(full_data.head())
+
+# Use Elbow and Silhouette methods to find optimal number of clusters
+sse = []
+silhouette_scores = []
+k_range = range(2, 11)
+
+X_scaled = full_data[numeric_cols]
+
+for k in k_range:
+    kmeans = KMeans(n_clusters=k, init='k-means++', random_state=42, n_init=10)
+    kmeans.fit(X_scaled)
+    sse.append(kmeans.inertia_)
+    silhouette_scores.append(silhouette_score(X_scaled, kmeans.labels_))
+
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.plot(k_range, sse, marker='o')
+plt.title('Elbow Method (SSE)')
+plt.xlabel('Number of Clusters (k)')
+plt.ylabel('SSE')
+
+plt.subplot(1, 2, 2)
+plt.plot(k_range, silhouette_scores, marker='o')
+plt.title('Silhouette Score')
+plt.xlabel('Number of Clusters (k)')
+plt.ylabel('Score')
+
+plt.tight_layout()
+plt.show()
