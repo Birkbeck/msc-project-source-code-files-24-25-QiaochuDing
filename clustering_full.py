@@ -60,3 +60,11 @@ for col in numeric_cols:
     plt.xticks(rotation=90)
     plt.show()
 
+# Calculate summary statistics for numeric columns
+summary_stats = full_data[numeric_cols].agg(['mean', 'median', 'std']).reset_index()
+print(summary_stats)
+
+# Scale the numeric data
+scaler = StandardScaler()
+full_data[numeric_cols] = scaler.fit_transform(full_data[numeric_cols])
+print(full_data.head())
