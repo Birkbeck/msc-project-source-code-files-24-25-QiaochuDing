@@ -13,3 +13,19 @@ from sklearn.decomposition import PCA
 full_data = pd.read_excel("/Users/QiaoChuDing_1/Desktop/Birkbeck/2024-2025/4. Project/msc-project-source-code-files-24-25-QiaochuDing/full_data.xlsx")
 full_data.replace("-", np.nan, inplace=True)
 print(full_data.head())
+
+# Map seasonality to numerical values and define numeric columns
+seasonality_map = {'Low': 1, 'Medium': 2, 'High': 3}
+full_data['seasonality'] = full_data['seasonality'].map(seasonality_map)
+
+numeric_cols = [
+    'non_UK_workforce',
+    'vacancy_rate',
+    'ssv_density',
+    'med_annual_wage_differential',
+    'visa_grants',
+    'jobs_at_risk_of_automation',
+    'seasonality'
+]
+
+print(full_data.dtypes)
