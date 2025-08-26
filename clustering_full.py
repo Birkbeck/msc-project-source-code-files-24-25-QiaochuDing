@@ -36,3 +36,6 @@ plt.figure(figsize=(8, 6))
 sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f")
 plt.title("Correlation Matrix")
 plt.show()
+
+# Check missing values
+print(full_data.isnull().sum())
