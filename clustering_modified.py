@@ -150,3 +150,6 @@ kmeans_8 = KMeans(n_clusters=8, init='k-means++', random_state=42, n_init=10)
 clusters_8 = kmeans_8.fit_predict(X)
 davies_bouldin_8 = davies_bouldin_score(X, clusters_8)
 print(f"Davies-Bouldin Index for 8 clusters: {davies_bouldin_8}")
+
+# Write out cluster labels to Excel
+modified_data.to_excel("modified_data_clusters.xlsx", index=False)
