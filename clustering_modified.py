@@ -239,3 +239,7 @@ synthetic_all = synthetic_all.merge(
 
 synthetic_all['drift'] = synthetic_all['dist_to_centroid'] - synthetic_all['baseline_dist_to_centroid']
 synthetic_all['cluster_changed'] = (synthetic_all['cluster_label'] != synthetic_all['baseline_cluster_label'])
+
+# Export to Excel
+
+synthetic_all.to_excel("synthetic_clusters_drift.xlsx", index=False)
