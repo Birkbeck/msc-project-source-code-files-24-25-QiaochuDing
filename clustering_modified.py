@@ -210,3 +210,32 @@ for scen in multipliers['scenario'].dropna().unique():
 
 synthetic_all = pd.concat(synthetic_list, ignore_index=True)
 
+# Calculate baseline clusters
+
+baseline_scaled = scaler.transform(baseline[model_cols])
+baseline_clusters = kmeans.predict(baseline_scaled)
+
+baseline['cluster_label'] = baseline_clusters
+
+# Calculate distance and drift
+
+centroids = kmeans.cluster_centers_
+baseline_dists = cdist(baseline_scaled, centroids, metric='euclidean')
+baseline['dist_to_centroid'] = baseline_dists[np.arange(baseline_dists.shape[0]), baseline_clusters]
+
+synthetic_scaled_all = scaler.transform(synthetic_all[model_cols])
+synthetic_clusters = kmeans.predict(synthetic_scaled_all)
+synthetic_all['cluster_label'] = synthetic_clusters
+
+syn_dists = cdist(synthetic_scaled_all, centroids, metric='euclidean')
+synthetic_all['dist_to_centroid'] = syn_dists[np.arange(syn_dists.shape[0]), synthetic_clusters]
+
+synthetic_all = synthetic_all.merge(
+    baseline[merge_keys + ['dist_to_centroid', 'cluster_label']]
+        .rename(columns={'dist_to_centroid': 'baseline_dist_to_centroid',
+                         'cluster_label': 'baseline_cluster_label'}),
+    on=merge_keys, how='left'
+)
+
+synthetic_all['drift'] = synthetic_all['dist_to_centroid'] - synthetic_all['baseline_dist_to_centroid']
+synthetic_all['cluster_changed'] = (synthetic_all['cluster_label'] != synthetic_all['baseline_cluster_label'])
