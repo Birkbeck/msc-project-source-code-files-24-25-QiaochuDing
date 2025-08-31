@@ -179,7 +179,34 @@ baseline['seasonality'] = baseline['seasonality'].map(seasonality_map)
 baseline = baseline.replace("-", np.nan)
 baseline[numeric_cols] = baseline[numeric_cols].fillna(baseline[numeric_cols].median())
 
-# Establish multipliers to generate synthetic data
+# Establish multipliers
 
 mult_needed = merge_keys + ['scenario'] + numeric_cols
 multipliers = multipliers[mult_needed].copy()
+
+# Multiply baseline with multipliers to generate synthetic data
+
+synthetic_list = []
+
+for scen in multipliers['scenario'].dropna().unique():
+    m_s = multipliers[multipliers['scenario'] == scen].copy()
+
+    merged = baseline.merge(
+        m_s.drop(columns=['scenario']),
+        on=merge_keys, how='left', suffixes=('', '_mult')
+    )
+
+    for c in numeric_cols:
+        mult_col = f"{c}_mult"
+        if mult_col not in merged:
+            merged[mult_col] = 1.0
+        merged[c] = merged[c] * merged[mult_col]
+
+    drop_cols = [f"{c}_mult" for c in numeric_cols]
+    merged = merged.drop(columns=drop_cols).copy()
+    merged['scenario'] = scen
+
+    synthetic_list.append(merged)
+
+synthetic_all = pd.concat(synthetic_list, ignore_index=True)
+
