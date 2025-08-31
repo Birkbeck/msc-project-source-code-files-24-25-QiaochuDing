@@ -153,3 +153,11 @@ print(f"Davies-Bouldin Index for 8 clusters: {davies_bouldin_8}")
 
 # Write out cluster labels to Excel
 modified_data.to_excel("modified_data_clusters.xlsx", index=False)
+
+# Preparing data for drift analysis
+
+from scipy.spatial.distance import cdist
+
+baseline = pd.read_excel("/Users/QiaoChuDing_1/Desktop/Birkbeck/2024-2025/4. Project/msc-project-source-code-files-24-25-QiaochuDing/modified_data.xlsx")
+multipliers = pd.read_excel("/Users/QiaoChuDing_1/Desktop/Birkbeck/2024-2025/4. Project/msc-project-source-code-files-24-25-QiaochuDing/multiplier_matrix.xlsx")
+
