@@ -161,3 +161,25 @@ from scipy.spatial.distance import cdist
 baseline = pd.read_excel("/Users/QiaoChuDing_1/Desktop/Birkbeck/2024-2025/4. Project/msc-project-source-code-files-24-25-QiaochuDing/modified_data.xlsx")
 multipliers = pd.read_excel("/Users/QiaoChuDing_1/Desktop/Birkbeck/2024-2025/4. Project/msc-project-source-code-files-24-25-QiaochuDing/multiplier_matrix.xlsx")
 
+numeric_cols = [
+    'non_UK_workforce',
+    'vacancy_rate',
+    'ssv_density',
+    'med_annual_wage_differential',
+    'visa_grants',
+    'jobs_at_risk_of_automation'
+]
+
+model_cols = numeric_cols + ['seasonality']
+merge_keys = ['sic_code']
+
+seasonality_map = {'Low': 1, 'Medium': 2, 'High': 3}
+baseline['seasonality'] = baseline['seasonality'].map(seasonality_map)
+
+baseline = baseline.replace("-", np.nan)
+baseline[numeric_cols] = baseline[numeric_cols].fillna(baseline[numeric_cols].median())
+
+# Establish multipliers to generate synthetic data
+
+mult_needed = merge_keys + ['scenario'] + numeric_cols
+multipliers = multipliers[mult_needed].copy()
