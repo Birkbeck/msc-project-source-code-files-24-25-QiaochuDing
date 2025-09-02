@@ -25,7 +25,6 @@ def load_assets():
 
 baseline, pca_coords, pca_explained, drift, cluster_summary = load_assets()
 
-# ---- Sidebar ----
 st.sidebar.header("Controls")
 clusters = sorted(baseline['cluster_label'].unique())
 selected_cluster = st.sidebar.selectbox("Cluster", options=["All"] + [str(c) for c in clusters], index=0)
@@ -41,3 +40,5 @@ shown_cols = st.sidebar.multiselect(
 
 sector_options = ["None"] + sorted(baseline['industry'].astype(str).unique())
 highlight_sector = st.sidebar.selectbox("Highlight sector (optional)", options=sector_options, index=0)
+
+tab_map, tab_clusters, tab_pca, tab_drift = st.tabs(["Systems Map", "Clusters", "PCA", "Drift"])
