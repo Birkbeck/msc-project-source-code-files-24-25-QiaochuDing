@@ -76,3 +76,29 @@ with tab_clusters:
            .properties(height=400)
            .interactive())
     st.altair_chart(bar, use_container_width=True)
+
+with tab_pca:
+    st.markdown("#### PCA (2D projection of industries)")
+    pca_view = pca_coords if selected_cluster == "All" else pca_coords[pca_coords['cluster_label'] == int(selected_cluster)]
+
+    base = (alt.Chart(pca_view)
+            .mark_circle(size=80)
+            .encode(
+                x='pc1:Q', y='pc2:Q',
+                color=alt.Color('cluster_label:N', legend=alt.Legend(title="Cluster")),
+                tooltip=['industry','cluster_label','pc1','pc2']
+            ))
+
+    chart = base
+    if highlight_sector != "None":
+        highlight = pca_coords[pca_coords['industry'] == highlight_sector]
+        if not highlight.empty:
+            h = (alt.Chart(highlight)
+                 .mark_point(filled=True, shape='triangle-up', size=200)
+                 .encode(x='pc1:Q', y='pc2:Q', color=alt.value('red'),
+                         tooltip=['industry','cluster_label']))
+            chart = base + h
+
+    st.altair_chart(chart.interactive().properties(height=500), use_container_width=True)
+    ev = pca_explained.iloc[0]
+    st.caption(f"Explained variance — PC1: {ev['explained_pc1']:.0%}, PC2: {ev['explained_pc2']:.0%}")
