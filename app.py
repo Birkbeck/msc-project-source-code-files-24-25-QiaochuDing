@@ -42,3 +42,7 @@ sector_options = ["None"] + sorted(baseline['industry'].astype(str).unique())
 highlight_sector = st.sidebar.selectbox("Highlight sector (optional)", options=sector_options, index=0)
 
 tab_map, tab_clusters, tab_pca, tab_drift = st.tabs(["Systems Map", "Clusters", "PCA", "Drift"])
+
+with tab_map:
+    st.markdown("#### Interactive Systems Map")
+    st.components.v1.iframe(KUMU_URL, height=700)
