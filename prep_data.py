@@ -6,3 +6,19 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from scipy.spatial.distance import cdist
 import joblib
+
+DATA_DIR = Path("data")
+OUT_DIR = Path("outputs")
+OUT_DIR.mkdir(exist_ok=True, parents=True)
+
+NUMERIC_COLS_NO_SEAS = [
+    'non_UK_workforce',
+    'vacancy_rate',
+    'ssv_density',
+    'med_annual_wage_differential',
+    'visa_grants',
+    'jobs_at_risk_of_automation',
+]
+MODEL_COLS = NUMERIC_COLS_NO_SEAS + ['seasonality']
+ID_COLS = ['industry', 'sic_code']
+SEASONALITY_MAP = {'Low': 1, 'Medium': 2, 'High': 3}
