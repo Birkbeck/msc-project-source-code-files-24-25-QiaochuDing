@@ -56,3 +56,13 @@ explained = pca.explained_variance_ratio_
 summary = (baseline_labeled.groupby('cluster_label')[NUMERIC_COLS_NO_SEAS + ['seasonality']]
            .agg(['mean','median','min','max','count'])
            .round(2))
+
+baseline_labeled.to_csv(OUT_DIR / "baseline_with_clusters.csv", index=False)
+pca_df.to_csv(OUT_DIR / "pca_coords.csv", index=False)
+summary.to_csv(OUT_DIR / "cluster_summary.csv")
+joblib.dump(scaler, OUT_DIR / "scaler.pkl")
+joblib.dump(kmeans, OUT_DIR / "kmeans.pkl")
+pd.DataFrame({
+    "explained_pc1": [explained[0]],
+    "explained_pc2": [explained[1]],
+}).to_csv(OUT_DIR / "pca_explained.csv", index=False)
