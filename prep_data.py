@@ -66,3 +66,25 @@ pd.DataFrame({
     "explained_pc1": [explained[0]],
     "explained_pc2": [explained[1]],
 }).to_csv(OUT_DIR / "pca_explained.csv", index=False)
+
+multipliers = pd.read_excel(DATA_DIR / "multiplier_matrix.xlsx")
+mult_needed = ['sic_code', 'scenario'] + NUMERIC_COLS_NO_SEAS
+multipliers = multipliers[mult_needed].copy()
+
+synthetic_list = []
+for scen in multipliers['scenario'].dropna().unique():
+    m_s = multipliers[multipliers['scenario'] == scen].copy()
+    merged = baseline_unscaled.merge(
+        m_s.drop(columns=['scenario']),
+        on=['sic_code'], how='left', suffixes=('', '_mult')
+    )
+    for c in NUMERIC_COLS_NO_SEAS:
+        mult_col = f"{c}_mult"
+        if mult_col not in merged:
+            merged[mult_col] = 1.0
+        merged[c] = merged[c] * merged[mult_col]
+    merged.drop(columns=[f"{c}_mult" for c in NUMERIC_COLS_NO_SEAS], inplace=True, errors='ignore')
+    merged['scenario'] = scen
+    synthetic_list.append(merged)
+
+synthetic_all = pd.concat(synthetic_list, ignore_index=True)
