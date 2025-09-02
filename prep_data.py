@@ -30,3 +30,9 @@ baseline = baseline.replace("-", np.nan)
 
 if baseline['seasonality'].dtype == object:
     baseline['seasonality'] = baseline['seasonality'].map(SEASONALITY_MAP)
+
+baseline_unscaled = baseline.copy()
+
+baseline_unscaled[NUMERIC_COLS_NO_SEAS] = baseline_unscaled[NUMERIC_COLS_NO_SEAS].fillna(
+    baseline_unscaled[NUMERIC_COLS_NO_SEAS].median()
+)
