@@ -22,3 +22,11 @@ NUMERIC_COLS_NO_SEAS = [
 MODEL_COLS = NUMERIC_COLS_NO_SEAS + ['seasonality']
 ID_COLS = ['industry', 'sic_code']
 SEASONALITY_MAP = {'Low': 1, 'Medium': 2, 'High': 3}
+
+N_CLUSTERS = 7
+
+baseline = pd.read_excel(DATA_DIR / "modified_data.xlsx")
+baseline = baseline.replace("-", np.nan)
+
+if baseline['seasonality'].dtype == object:
+    baseline['seasonality'] = baseline['seasonality'].map(SEASONALITY_MAP)
