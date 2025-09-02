@@ -36,3 +36,12 @@ baseline_unscaled = baseline.copy()
 baseline_unscaled[NUMERIC_COLS_NO_SEAS] = baseline_unscaled[NUMERIC_COLS_NO_SEAS].fillna(
     baseline_unscaled[NUMERIC_COLS_NO_SEAS].median()
 )
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(baseline_unscaled[MODEL_COLS])
+
+kmeans = KMeans(n_clusters=N_CLUSTERS, init='k-means++', random_state=42, n_init=10)
+labels = kmeans.fit_predict(X_scaled)
+
+baseline_labeled = baseline_unscaled.copy()
+baseline_labeled['cluster_label'] = labels
