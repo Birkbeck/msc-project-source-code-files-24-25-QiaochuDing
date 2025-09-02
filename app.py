@@ -102,3 +102,45 @@ with tab_pca:
     st.altair_chart(chart.interactive().properties(height=500), use_container_width=True)
     ev = pca_explained.iloc[0]
     st.caption(f"Explained variance — PC1: {ev['explained_pc1']:.0%}, PC2: {ev['explained_pc2']:.0%}")
+
+with tab_drift:
+    st.markdown("#### Drift by scenario")
+    scenarios = sorted(drift['scenario'].dropna().unique().tolist())
+    if scenarios:
+        selected_scen = st.selectbox("Scenario", options=scenarios, index=0)
+        dview = drift[drift['scenario'] == selected_scen].copy()
+
+        # Ensure industry/cluster_label present
+        if 'industry' not in dview.columns or 'cluster_label' not in dview.columns:
+            dview = dview.merge(baseline[['sic_code','industry','cluster_label']], on='sic_code', how='left')
+
+        if selected_cluster != "All":
+            dview = dview[dview['cluster_label'] == int(selected_cluster)]
+
+        c1, c2, c3 = st.columns(3)
+        with c1: st.metric("Industries changing cluster", int(dview['cluster_changed'].sum()))
+        with c2: st.metric("Max positive drift", f"{dview['drift'].max():.2f}")
+        with c3: st.metric("Max negative drift", f"{dview['drift'].min():.2f}")
+
+        drift_bar = (alt.Chart(dview)
+                     .mark_bar()
+                     .encode(
+                         x=alt.X('industry:N', sort='-y'),
+                         y=alt.Y('drift:Q', title='Distance change to centroid'),
+                         color=alt.Color('cluster_changed:N', legend=alt.Legend(title='Cluster changed?')),
+                         tooltip=['industry','drift','cluster_changed','cluster_label']
+                     )
+                     .properties(height=450)
+                     .interactive())
+        st.altair_chart(drift_bar, use_container_width=True)
+
+        st.markdown("##### Top movers")
+        cA, cB = st.columns(2)
+        with cA:
+            st.write("Top +ve drift")
+            st.dataframe(dview.nlargest(10, 'drift')[['industry','drift']])
+        with cB:
+            st.write("Top −ve drift")
+            st.dataframe(dview.nsmallest(10, 'drift')[['industry','drift']])
+    else:
+        st.info("No scenarios found in the drift file.")
