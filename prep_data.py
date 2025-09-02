@@ -88,3 +88,29 @@ for scen in multipliers['scenario'].dropna().unique():
     synthetic_list.append(merged)
 
 synthetic_all = pd.concat(synthetic_list, ignore_index=True)
+
+if synthetic_all['seasonality'].dtype == object:
+    synthetic_all['seasonality'] = synthetic_all['seasonality'].map(SEASONALITY_MAP)
+
+X_syn_scaled = scaler.transform(synthetic_all[MODEL_COLS])
+syn_labels = kmeans.predict(X_syn_scaled)
+synthetic_all['cluster_label'] = syn_labels
+
+centroids = kmeans.cluster_centers_
+syn_dists = cdist(X_syn_scaled, centroids, metric='euclidean')
+synthetic_all['dist_to_centroid'] = syn_dists[np.arange(syn_dists.shape[0]), syn_labels]
+
+base_dists = cdist(X_scaled, centroids, metric='euclidean')
+baseline_labeled['dist_to_centroid'] = base_dists[np.arange(base_dists.shape[0]), labels]
+
+synthetic_all = synthetic_all.merge(
+    baseline_labeled[['sic_code', 'industry', 'cluster_label', 'dist_to_centroid']].rename(
+        columns={'cluster_label': 'baseline_cluster_label', 'dist_to_centroid': 'baseline_dist_to_centroid'}
+    ),
+    on='sic_code', how='left'
+)
+
+synthetic_all['drift'] = synthetic_all['dist_to_centroid'] - synthetic_all['baseline_dist_to_centroid']
+synthetic_all['cluster_changed'] = (synthetic_all['cluster_label'] != synthetic_all['baseline_cluster_label'])
+
+synthetic_all.to_csv(OUT_DIR / "synthetic_clusters_drift.csv", index=False)
