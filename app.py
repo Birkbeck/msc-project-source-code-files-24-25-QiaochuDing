@@ -46,3 +46,33 @@ tab_map, tab_clusters, tab_pca, tab_drift = st.tabs(["Systems Map", "Clusters", 
 with tab_map:
     st.markdown("#### Interactive Systems Map")
     st.components.v1.iframe(KUMU_URL, height=700)
+
+with tab_clusters:
+    st.markdown("#### Cluster overview")
+    view_df = baseline if selected_cluster == "All" else baseline[baseline['cluster_label'] == int(selected_cluster)]
+
+    kpi_cols = (shown_cols[:3] if len(shown_cols) >= 3 else shown_cols) or numeric_cols[:3]
+    cols = st.columns(len(kpi_cols))
+    for col, metric in zip(cols, kpi_cols):
+        with col:
+            st.metric(label=f"{metric} (mean)", value=f"{view_df[metric].mean():.2f}")
+
+    st.markdown("##### Summary statistics")
+    st.dataframe(cluster_summary if isinstance(cluster_summary.columns, pd.MultiIndex)
+                 else (view_df[shown_cols]).agg(['mean','median','min','max','count']).round(2))
+
+    st.markdown("##### Industries in view")
+    st.dataframe(view_df[['industry','sic_code','cluster_label'] + shown_cols].sort_values(['cluster_label','industry']))
+
+    metric_for_bar = st.selectbox("Bar chart metric", options=shown_cols, index=0)
+    bar_data = view_df[['industry', metric_for_bar]].sort_values(metric_for_bar, ascending=False)
+    bar = (alt.Chart(bar_data)
+           .mark_bar()
+           .encode(
+               x=alt.X('industry:N', sort='-y'),
+               y=alt.Y(f'{metric_for_bar}:Q'),
+               tooltip=['industry', metric_for_bar]
+           )
+           .properties(height=400)
+           .interactive())
+    st.altair_chart(bar, use_container_width=True)
