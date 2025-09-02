@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 from scipy.spatial.distance import cdist
 import joblib
 
-DATA_DIR = Path("data")
+DATA_DIR = Path("labour-deps/data/")
 OUT_DIR = Path("outputs")
 OUT_DIR.mkdir(exist_ok=True, parents=True)
 
