@@ -45,3 +45,10 @@ labels = kmeans.fit_predict(X_scaled)
 
 baseline_labeled = baseline_unscaled.copy()
 baseline_labeled['cluster_label'] = labels
+
+pca = PCA(n_components=2, random_state=42)
+coords = pca.fit_transform(X_scaled)
+pca_df = baseline_labeled[ID_COLS + ['cluster_label']].copy()
+pca_df['pc1'] = coords[:, 0]
+pca_df['pc2'] = coords[:, 1]
+explained = pca.explained_variance_ratio_
