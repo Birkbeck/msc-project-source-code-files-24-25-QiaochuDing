@@ -52,3 +52,7 @@ pca_df = baseline_labeled[ID_COLS + ['cluster_label']].copy()
 pca_df['pc1'] = coords[:, 0]
 pca_df['pc2'] = coords[:, 1]
 explained = pca.explained_variance_ratio_
+
+summary = (baseline_labeled.groupby('cluster_label')[NUMERIC_COLS_NO_SEAS + ['seasonality']]
+           .agg(['mean','median','min','max','count'])
+           .round(2))
