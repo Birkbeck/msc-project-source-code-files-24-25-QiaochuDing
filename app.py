@@ -4,10 +4,24 @@ import streamlit as st
 import altair as alt
 from pathlib import Path
 
+OUT_DIR = Path("labour-deps-dashboard/output")
+
+# PAGE CONFIGURATION
+
 st.set_page_config(page_title="UK Labour Market Dependencies Dashboard", layout="wide")
-OUT_DIR = Path("outputs")
+
+st.title("UK Labour Market Dependencies Dashboard")
+st.caption("Explore the Causal Loop Diagram, industry sector clusters, summary statistics, and PCA visualisation.")
 
 KUMU_URL = "https://embed.kumu.io/3f568e13ef2bb7522bdb8baf3a349991"
+
+# TABS
+
+tab_map, tab_clusters, tab_pca = st.tabs(["Systems Map", "Clusters", "PCA"])
+
+with tab_map:
+    st.markdown("#### Interactive Systems Map")
+    st.components.v1.iframe(KUMU_URL, height=700)
 
 @st.cache_data
 def load_assets():
@@ -15,17 +29,12 @@ def load_assets():
     pca_coords = pd.read_csv(OUT_DIR / "pca_coords.csv")
     pca_explained = pd.read_csv(OUT_DIR / "pca_explained.csv")
     drift = pd.read_csv(OUT_DIR / "synthetic_clusters_drift.csv")
-    try:
-        summary = pd.read_csv(OUT_DIR / "cluster_summary.csv", header=[0,1])
-    except Exception:
-        keep_cols = [c for c in baseline.columns if c not in ['industry','sic_code','cluster_label']]
-        summary = (baseline.groupby('cluster_label')[keep_cols]
-                   .agg(['mean','median','min','max','count']).round(2))
+    summary = pd.read_csv(OUT_DIR / "cluster_summary.csv", header=[0,1])
     return baseline, pca_coords, pca_explained, drift, summary
 
 baseline, pca_coords, pca_explained, drift, cluster_summary = load_assets()
 
-st.sidebar.header("Controls")
+st.sidebar.header("Settings")
 clusters = sorted(baseline['cluster_label'].unique())
 selected_cluster = st.sidebar.selectbox("Cluster", options=["All"] + [str(c) for c in clusters], index=0)
 
@@ -40,12 +49,6 @@ shown_cols = st.sidebar.multiselect(
 
 sector_options = ["None"] + sorted(baseline['industry'].astype(str).unique())
 highlight_sector = st.sidebar.selectbox("Highlight sector (optional)", options=sector_options, index=0)
-
-tab_map, tab_clusters, tab_pca, tab_drift = st.tabs(["Systems Map", "Clusters", "PCA", "Drift"])
-
-with tab_map:
-    st.markdown("#### Interactive Systems Map")
-    st.components.v1.iframe(KUMU_URL, height=700)
 
 with tab_clusters:
     st.markdown("#### Cluster overview")
@@ -100,47 +103,3 @@ with tab_pca:
             chart = base + h
 
     st.altair_chart(chart.interactive().properties(height=500), use_container_width=True)
-    ev = pca_explained.iloc[0]
-    st.caption(f"Explained variance — PC1: {ev['explained_pc1']:.0%}, PC2: {ev['explained_pc2']:.0%}")
-
-with tab_drift:
-    st.markdown("#### Drift by scenario")
-    scenarios = sorted(drift['scenario'].dropna().unique().tolist())
-    if scenarios:
-        selected_scen = st.selectbox("Scenario", options=scenarios, index=0)
-        dview = drift[drift['scenario'] == selected_scen].copy()
-
-        # Ensure industry/cluster_label present
-        if 'industry' not in dview.columns or 'cluster_label' not in dview.columns:
-            dview = dview.merge(baseline[['sic_code','industry','cluster_label']], on='sic_code', how='left')
-
-        if selected_cluster != "All":
-            dview = dview[dview['cluster_label'] == int(selected_cluster)]
-
-        c1, c2, c3 = st.columns(3)
-        with c1: st.metric("Industries changing cluster", int(dview['cluster_changed'].sum()))
-        with c2: st.metric("Max positive drift", f"{dview['drift'].max():.2f}")
-        with c3: st.metric("Max negative drift", f"{dview['drift'].min():.2f}")
-
-        drift_bar = (alt.Chart(dview)
-                     .mark_bar()
-                     .encode(
-                         x=alt.X('industry:N', sort='-y'),
-                         y=alt.Y('drift:Q', title='Distance change to centroid'),
-                         color=alt.Color('cluster_changed:N', legend=alt.Legend(title='Cluster changed?')),
-                         tooltip=['industry','drift','cluster_changed','cluster_label']
-                     )
-                     .properties(height=450)
-                     .interactive())
-        st.altair_chart(drift_bar, use_container_width=True)
-
-        st.markdown("##### Top movers")
-        cA, cB = st.columns(2)
-        with cA:
-            st.write("Top +ve drift")
-            st.dataframe(dview.nlargest(10, 'drift')[['industry','drift']])
-        with cB:
-            st.write("Top −ve drift")
-            st.dataframe(dview.nsmallest(10, 'drift')[['industry','drift']])
-    else:
-        st.info("No scenarios found in the drift file.")
