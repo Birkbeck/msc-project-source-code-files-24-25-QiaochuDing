@@ -1,138 +1,108 @@
-import io
-import sys
+import pandas as pd
+import numpy as np
+import streamlit as st
+import altair as alt
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-import streamlit as st
-
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from scipy.spatial.distance import cdist
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-import joblib
-
-
-# CONSTANTS
-
-DATA_DIR = Path("labour-deps-dashboard/data")
 OUT_DIR = Path("labour-deps-dashboard/output")
 
-ID_COLS = ["industry", "sic_code"]
-SEASONALITY_MAP = {"Low": 1, "Medium": 2, "High": 3}
+# PAGE CONFIGURATION
 
-NUMERIC_COLS = [
-    "non_UK_workforce",
-    "vacancy_rate",
-    "ssv_density",
-    "med_annual_wage_differential",
-    "visa_grants",
-    "jobs_at_risk_of_automation",
-    "seasonality",
-]
-MODEL_COLS = NUMERIC_COLS
+st.set_page_config(page_title="UK Labour Market Dependencies Dashboard", layout="wide")
+
+st.title("UK Labour Market Dependencies Dashboard")
+st.caption("Explore the Causal Loop Diagram, industry sector clusters, summary statistics, and PCA visualisation.")
+
+KUMU_URL = "https://embed.kumu.io/3f568e13ef2bb7522bdb8baf3a349991"
+
+# TABS
+
+tab_map, tab_clusters, tab_pca = st.tabs(["Systems Map", "Clusters", "PCA"])
+
+with tab_map:
+    st.markdown("#### Interactive Systems Map")
+    st.components.v1.iframe(KUMU_URL, height=700)
+
+@st.cache_data
+def load_assets():
+    baseline = pd.read_csv(OUT_DIR / "baseline_with_clusters.csv")
+    pca_coords = pd.read_csv(OUT_DIR / "pca_coords.csv")
+    pca_explained = pd.read_csv(OUT_DIR / "pca_explained.csv")
+    drift = pd.read_csv(OUT_DIR / "synthetic_clusters_drift.csv")
+    summary = pd.read_csv(OUT_DIR / "cluster_summary.csv", header=[0,1])
+    return baseline, pca_coords, pca_explained, drift, summary
+
+baseline, pca_coords, pca_explained, drift, cluster_summary = load_assets()
 
 
-N_CLUSTERS = 7
+st.sidebar.header("Settings")
+clusters = sorted(baseline['cluster_label'].unique())
+selected_cluster = st.sidebar.selectbox("Cluster", options=["All"] + [str(c) for c in clusters], index=0)
 
 
 
-# DATA PREP
-
-baseline = pd.read_excel(DATA_DIR / "modified_data.xlsx")
-baseline = baseline.replace("-", np.nan)
-seasonality_map = {'Low': 1, 'Medium': 2, 'High': 3}
-baseline['seasonality'] = baseline['seasonality'].map(seasonality_map)
-baseline[NUMERIC_COLS] = baseline[NUMERIC_COLS].fillna(baseline[NUMERIC_COLS].median())
-baseline_unscaled = baseline.copy()
-
-# SCALE AND CLUSTER
-
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(baseline_unscaled[MODEL_COLS])
-kmeans = KMeans(n_clusters=N_CLUSTERS, init='k-means++', random_state=42, n_init=10)
-labels = kmeans.fit_predict(X_scaled)
-baseline_labeled = baseline_unscaled.copy()
-baseline_labeled['cluster_label'] = labels
-
-# PCA
-
-pca = PCA(n_components=2, random_state=42)
-coords = pca.fit_transform(X_scaled)
-pca_df = baseline_labeled[ID_COLS + ['cluster_label']].copy()
-pca_df['pc1'] = coords[:, 0]
-pca_df['pc2'] = coords[:, 1]
-explained = pca.explained_variance_ratio_
-
-# Cluster means
-
-summary = (baseline_labeled.groupby('cluster_label')[NUMERIC_COLS].mean().round(2))
-
-# OUTPUTS
-
-baseline_labeled.to_csv(OUT_DIR / "baseline_with_clusters.csv", index=False)
-pca_df.to_csv(OUT_DIR / "pca_coords.csv", index=False)
-summary.to_csv(OUT_DIR / "cluster_summary.csv")
-joblib.dump(scaler, OUT_DIR / "scaler.pkl")
-joblib.dump(kmeans, OUT_DIR / "kmeans.pkl")
-pd.DataFrame({
-    "explained_pc1": [explained[0]],
-    "explained_pc2": [explained[1]],
-}).to_csv(OUT_DIR / "pca_explained.csv", index=False)
-
-# DRIFT
-
-multipliers = pd.read_excel(DATA_DIR / "multiplier_matrix.xlsx")
-multipliers['seasonality'] = multipliers['seasonality'].map(seasonality_map)
-mult_needed = ['sic_code', 'scenario'] + NUMERIC_COLS
-multipliers = multipliers[mult_needed].copy()
-
-synthetic_list = []
-for scen in multipliers['scenario'].dropna().unique():
-    m_s = multipliers[multipliers['scenario'] == scen].copy()
-    merged = baseline_unscaled.merge(
-        m_s.drop(columns=['scenario']),
-        on=['sic_code'], how='left', suffixes=('', '_mult')
-    )
-    for c in NUMERIC_COLS:
-        mult_col = f"{c}_mult"
-        if mult_col not in merged:
-            merged[mult_col] = 1.0
-        merged[c] = merged[c] * merged[mult_col]
-    merged.drop(columns=[f"{c}_mult" for c in NUMERIC_COLS], inplace=True, errors='ignore')
-    merged['scenario'] = scen
-    synthetic_list.append(merged)
-
-synthetic_all = pd.concat(synthetic_list, ignore_index=True)
-
-# Predict clusters + distances using saved scaler/kmeans
-X_syn_scaled = scaler.transform(synthetic_all[MODEL_COLS])
-syn_labels = kmeans.predict(X_syn_scaled)
-synthetic_all['cluster_label'] = syn_labels
-
-centroids = kmeans.cluster_centers_
-syn_dists = cdist(X_syn_scaled, centroids, metric='euclidean')
-synthetic_all['dist_to_centroid'] = syn_dists[np.arange(syn_dists.shape[0]), syn_labels]
-
-# Baseline distances (once)
-base_dists = cdist(X_scaled, centroids, metric='euclidean')
-baseline_labeled['dist_to_centroid'] = base_dists[np.arange(base_dists.shape[0]), labels]
-
-# Merge baseline cluster + distance via sic_code
-synthetic_all = synthetic_all.merge(
-    baseline_labeled[['sic_code', 'industry', 'cluster_label', 'dist_to_centroid']].rename(
-        columns={'cluster_label': 'baseline_cluster_label', 'dist_to_centroid': 'baseline_dist_to_centroid'}
-    ),
-    on='sic_code', how='left'
+id_like = {'industry','sic_code','cluster_label','seasonality'}
+numeric_cols = [c for c in baseline.columns if c not in id_like and pd.api.types.is_numeric_dtype(baseline[c])]
+default_show = ['non_UK_workforce','vacancy_rate','ssv_density','med_annual_wage_differential']
+shown_cols = st.sidebar.multiselect(
+    "Indicators to summarise",
+    options=numeric_cols,
+    default=[c for c in default_show if c in numeric_cols] or numeric_cols[:4]
 )
 
-synthetic_all['drift'] = synthetic_all['dist_to_centroid'] - synthetic_all['baseline_dist_to_centroid']
-synthetic_all['cluster_changed'] = (synthetic_all['cluster_label'] != synthetic_all['baseline_cluster_label'])
+sector_options = ["None"] + sorted(baseline['industry'].astype(str).unique())
+highlight_sector = st.sidebar.selectbox("Highlight sector (optional)", options=sector_options, index=0)
 
-synthetic_all.to_csv(OUT_DIR / "synthetic_clusters_drift.csv", index=False)
+with tab_clusters:
+    st.markdown("#### Cluster overview")
+    view_df = baseline if selected_cluster == "All" else baseline[baseline['cluster_label'] == int(selected_cluster)]
 
+    kpi_cols = (shown_cols[:3] if len(shown_cols) >= 3 else shown_cols) or numeric_cols[:3]
+    cols = st.columns(len(kpi_cols))
+    for col, metric in zip(cols, kpi_cols):
+        with col:
+            st.metric(label=f"{metric} (mean)", value=f"{view_df[metric].mean():.2f}")
 
+    st.markdown("##### Summary statistics")
+    st.dataframe(cluster_summary if isinstance(cluster_summary.columns, pd.MultiIndex)
+                 else (view_df[shown_cols]).agg(['mean','median','min','max','count']).round(2))
 
+    st.markdown("##### Industries in view")
+    st.dataframe(view_df[['industry','sic_code','cluster_label'] + shown_cols].sort_values(['cluster_label','industry']))
+
+    metric_for_bar = st.selectbox("Bar chart metric", options=shown_cols, index=0)
+    bar_data = view_df[['industry', metric_for_bar]].sort_values(metric_for_bar, ascending=False)
+    bar = (alt.Chart(bar_data)
+           .mark_bar()
+           .encode(
+               x=alt.X('industry:N', sort='-y'),
+               y=alt.Y(f'{metric_for_bar}:Q'),
+               tooltip=['industry', metric_for_bar]
+           )
+           .properties(height=400)
+           .interactive())
+    st.altair_chart(bar, use_container_width=True)
+
+with tab_pca:
+    st.markdown("#### PCA (2D projection of industries)")
+    pca_view = pca_coords if selected_cluster == "All" else pca_coords[pca_coords['cluster_label'] == int(selected_cluster)]
+
+    base = (alt.Chart(pca_view)
+            .mark_circle(size=80)
+            .encode(
+                x='pc1:Q', y='pc2:Q',
+                color=alt.Color('cluster_label:N', legend=alt.Legend(title="Cluster")),
+                tooltip=['industry','cluster_label','pc1','pc2']
+            ))
+
+    chart = base
+    if highlight_sector != "None":
+        highlight = pca_coords[pca_coords['industry'] == highlight_sector]
+        if not highlight.empty:
+            h = (alt.Chart(highlight)
+                 .mark_point(filled=True, shape='triangle-up', size=200)
+                 .encode(x='pc1:Q', y='pc2:Q', color=alt.value('red'),
+                         tooltip=['industry','cluster_label']))
+            chart = base + h
+
+    st.altair_chart(chart.interactive().properties(height=500), use_container_width=True)
