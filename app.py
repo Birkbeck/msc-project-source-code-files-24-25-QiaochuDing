@@ -34,9 +34,12 @@ def load_assets():
 
 baseline, pca_coords, pca_explained, drift, cluster_summary = load_assets()
 
+
 st.sidebar.header("Settings")
 clusters = sorted(baseline['cluster_label'].unique())
 selected_cluster = st.sidebar.selectbox("Cluster", options=["All"] + [str(c) for c in clusters], index=0)
+
+
 
 id_like = {'industry','sic_code','cluster_label','seasonality'}
 numeric_cols = [c for c in baseline.columns if c not in id_like and pd.api.types.is_numeric_dtype(baseline[c])]
