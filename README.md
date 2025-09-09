@@ -1,7 +1,5 @@
 # msc-project-source-code-files-24-25-QiaochuDing
 
-## MSc Data Science Project (2025)
-
 This GitHub repository contains the data and code files for **Qiaochu Ding's MSc Data Science Project (2025)**.  
 An index of contents is listed below.
 
@@ -60,7 +58,7 @@ An index of contents is listed below.
 ---
 
 ### To view the interactive dashboard
-1. Go to <a href="https://birkbeck-msc-project-source-code-files-24-25-q-dashboard-xv3lai.streamlit.app/" target="_blank">the hosted dashboard</a>.  
+1. Go to [the hosted dashboard](https://birkbeck-msc-project-source-code-files-24-25-q-dashboard-xv3lai.streamlit.app/).
 2. Alternatively, run:  
    ```bash
    python prep.py
