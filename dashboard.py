@@ -5,7 +5,6 @@ import altair as alt
 from pathlib import Path
 
 # Define constants
-
 OUT_DIR = Path("labour-deps-dashboard/output")
 KUMU_URL = "https://embed.kumu.io/3b21f59a42a0ea30e5dda4662cf3897a"
 
