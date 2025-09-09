@@ -1,27 +1,27 @@
+# Import packages
 import pandas as pd
 import streamlit as st
 import altair as alt
 from pathlib import Path
 
+# Define constants
+
 OUT_DIR = Path("labour-deps-dashboard/output")
+KUMU_URL = "https://embed.kumu.io/3b21f59a42a0ea30e5dda4662cf3897a"
 
-# PAGE CONFIGURATION
-
+# Page configuration
 st.set_page_config(page_title="UK Labour Market Dependencies Dashboard", layout="wide")
-
 st.title("UK Labour Market Dependencies Dashboard")
 st.caption("Explore the Causal Loop Diagram, industry sector clusters, summary statistics, and PCA visualisation.")
 
-KUMU_URL = "https://embed.kumu.io/3b21f59a42a0ea30e5dda4662cf3897a"
-
-# TABS
-
+# Kumu
 tab_map, tab_clusters, tab_pca = st.tabs(["Systems Map", "Clusters", "PCA"])
 
 with tab_map:
-    st.markdown("#### Interactive Systems Map")
+    st.markdown("#### Causal Loop Diagram")
     st.components.v1.iframe(KUMU_URL, height=700)
 
+# Load data
 @st.cache_data
 def load_assets():
     baseline = pd.read_csv(OUT_DIR / "baseline_with_clusters.csv")
@@ -33,12 +33,10 @@ def load_assets():
 
 baseline, pca_coords, pca_explained, drift, cluster_summary = load_assets()
 
-
+# Sidebar settings
 st.sidebar.header("Settings")
 clusters = sorted(baseline['cluster_label'].unique())
 selected_cluster = st.sidebar.selectbox("Cluster", options=["All"] + [str(c) for c in clusters], index=0)
-
-
 
 id_like = {'industry','sic_code','cluster_label','seasonality'}
 numeric_cols = [c for c in baseline.columns if c not in id_like and pd.api.types.is_numeric_dtype(baseline[c])]
@@ -52,6 +50,7 @@ shown_cols = st.sidebar.multiselect(
 sector_options = ["None"] + sorted(baseline['industry'].astype(str).unique())
 highlight_sector = st.sidebar.selectbox("Highlight sector (optional)", options=sector_options, index=0)
 
+# Other tabs
 with tab_clusters:
     st.markdown("#### Cluster overview")
     view_df = baseline if selected_cluster == "All" else baseline[baseline['cluster_label'] == int(selected_cluster)]
