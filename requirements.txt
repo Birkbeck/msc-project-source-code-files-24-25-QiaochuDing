@@ -1,9 +1,10 @@
-
-streamlit
 pandas
 numpy
 scikit-learn
 matplotlib
 seaborn
 scipy
-openpyxl
+streamlit
+altair
+pathlib
+joblib
