@@ -1,26 +1,16 @@
-import io
-import sys
+# Import libraries
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
-import streamlit as st
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from scipy.spatial.distance import cdist
-
-import matplotlib.pyplot as plt
-import seaborn as sns
 import joblib
 
-
-# CONSTANTS
-
+# Define constants
 DATA_DIR = Path("labour-deps-dashboard/data")
 OUT_DIR = Path("labour-deps-dashboard/output")
-
 ID_COLS = ["industry", "sic_code"]
 SEASONALITY_MAP = {"Low": 1, "Medium": 2, "High": 3}
 
@@ -33,15 +23,11 @@ NUMERIC_COLS = [
     "jobs_at_risk_of_automation",
     "seasonality",
 ]
+
 MODEL_COLS = NUMERIC_COLS
-
-
 N_CLUSTERS = 7
 
-
-
-# DATA PREP
-
+# Prep data
 baseline = pd.read_excel(DATA_DIR / "modified_data.xlsx")
 baseline = baseline.replace("-", np.nan)
 seasonality_map = {'Low': 1, 'Medium': 2, 'High': 3}
@@ -49,8 +35,7 @@ baseline['seasonality'] = baseline['seasonality'].map(seasonality_map)
 baseline[NUMERIC_COLS] = baseline[NUMERIC_COLS].fillna(baseline[NUMERIC_COLS].median())
 baseline_unscaled = baseline.copy()
 
-# SCALE AND CLUSTER
-
+# Scale and cluster
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(baseline_unscaled[MODEL_COLS])
 kmeans = KMeans(n_clusters=N_CLUSTERS, init='k-means++', random_state=42, n_init=10)
@@ -59,7 +44,6 @@ baseline_labeled = baseline_unscaled.copy()
 baseline_labeled['cluster_label'] = labels
 
 # PCA
-
 pca = PCA(n_components=2, random_state=42)
 coords = pca.fit_transform(X_scaled)
 pca_df = baseline_labeled[ID_COLS + ['cluster_label']].copy()
@@ -68,11 +52,9 @@ pca_df['pc2'] = coords[:, 1]
 explained = pca.explained_variance_ratio_
 
 # Cluster means
-
 summary = (baseline_labeled.groupby('cluster_label')[NUMERIC_COLS].mean().round(2))
 
-# OUTPUTS
-
+# Write outputs
 baseline_labeled.to_csv(OUT_DIR / "baseline_with_clusters.csv", index=False)
 pca_df.to_csv(OUT_DIR / "pca_coords.csv", index=False)
 summary.to_csv(OUT_DIR / "cluster_summary.csv")
@@ -83,8 +65,7 @@ pd.DataFrame({
     "explained_pc2": [explained[1]],
 }).to_csv(OUT_DIR / "pca_explained.csv", index=False)
 
-# DRIFT
-
+# Calculate drift
 multipliers = pd.read_excel(DATA_DIR / "multiplier_matrix.xlsx")
 multipliers['seasonality'] = multipliers['seasonality'].map(seasonality_map)
 mult_needed = ['sic_code', 'scenario'] + NUMERIC_COLS
@@ -108,7 +89,7 @@ for scen in multipliers['scenario'].dropna().unique():
 
 synthetic_all = pd.concat(synthetic_list, ignore_index=True)
 
-# Predict clusters + distances using saved scaler/kmeans
+# Predict clusters and distances using saved scaler/kmeans
 X_syn_scaled = scaler.transform(synthetic_all[MODEL_COLS])
 syn_labels = kmeans.predict(X_syn_scaled)
 synthetic_all['cluster_label'] = syn_labels
@@ -117,11 +98,11 @@ centroids = kmeans.cluster_centers_
 syn_dists = cdist(X_syn_scaled, centroids, metric='euclidean')
 synthetic_all['dist_to_centroid'] = syn_dists[np.arange(syn_dists.shape[0]), syn_labels]
 
-# Baseline distances (once)
+# Baseline distances (only needed once)
 base_dists = cdist(X_scaled, centroids, metric='euclidean')
 baseline_labeled['dist_to_centroid'] = base_dists[np.arange(base_dists.shape[0]), labels]
 
-# Merge baseline cluster + distance via sic_code
+# Merge baseline clusters and distances via sic_code
 synthetic_all = synthetic_all.merge(
     baseline_labeled[['sic_code', 'industry', 'cluster_label', 'dist_to_centroid']].rename(
         columns={'cluster_label': 'baseline_cluster_label', 'dist_to_centroid': 'baseline_dist_to_centroid'}
@@ -131,8 +112,4 @@ synthetic_all = synthetic_all.merge(
 
 synthetic_all['drift'] = synthetic_all['dist_to_centroid'] - synthetic_all['baseline_dist_to_centroid']
 synthetic_all['cluster_changed'] = (synthetic_all['cluster_label'] != synthetic_all['baseline_cluster_label'])
-
 synthetic_all.to_csv(OUT_DIR / "synthetic_clusters_drift.csv", index=False)
-
-
-
