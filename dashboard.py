@@ -14,7 +14,7 @@ st.title("UK Labour Market Dependencies Dashboard")
 st.caption("Explore the Causal Loop Diagram, industry sector clusters, summary statistics, and PCA visualisation.")
 
 # Kumu
-tab_map, tab_clusters, tab_pca = st.tabs(["Systems Map", "Clusters", "PCA"])
+tab_map, tab_clusters, tab_pca = st.tabs(["CLD", "Clusters", "PCA"])
 
 with tab_map:
     st.markdown("#### Causal Loop Diagram")
