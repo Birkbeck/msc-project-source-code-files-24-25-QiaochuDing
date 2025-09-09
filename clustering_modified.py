@@ -8,8 +8,9 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import davies_bouldin_score
 from sklearn.decomposition import PCA
+from scipy.spatial.distance import cdist
 
-# Load data and replace '-' with NaN
+# Load data and replace '-' with NaN (change file path as needed)
 modified_data = pd.read_excel("/Users/QiaoChuDing_1/Desktop/Birkbeck/2024-2025/4. Project/msc-project-source-code-files-24-25-QiaochuDing/modified_data.xlsx")
 modified_data.replace("-", np.nan, inplace=True)
 print(modified_data.head())
@@ -154,10 +155,7 @@ print(f"Davies-Bouldin Index for 8 clusters: {davies_bouldin_8}")
 # Write out cluster labels to Excel
 modified_data.to_excel("modified_data_clusters.xlsx", index=False)
 
-# Preparing data for drift analysis
-
-from scipy.spatial.distance import cdist
-
+# Prep data for drift analysis (change file paths as needed)
 baseline = pd.read_excel("/Users/QiaoChuDing_1/Desktop/Birkbeck/2024-2025/4. Project/msc-project-source-code-files-24-25-QiaochuDing/modified_data.xlsx")
 multipliers = pd.read_excel("/Users/QiaoChuDing_1/Desktop/Birkbeck/2024-2025/4. Project/msc-project-source-code-files-24-25-QiaochuDing/multiplier_matrix.xlsx")
 
@@ -180,12 +178,10 @@ baseline = baseline.replace("-", np.nan)
 baseline[numeric_cols] = baseline[numeric_cols].fillna(baseline[numeric_cols].median())
 
 # Establish multipliers
-
 mult_needed = merge_keys + ['scenario'] + numeric_cols
 multipliers = multipliers[mult_needed].copy()
 
 # Multiply baseline with multipliers to generate synthetic data
-
 synthetic_list = []
 
 for scen in multipliers['scenario'].dropna().unique():
