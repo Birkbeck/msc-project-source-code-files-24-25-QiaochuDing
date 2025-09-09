@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import streamlit as st
 import altair as alt
 from pathlib import Path
@@ -13,7 +12,7 @@ st.set_page_config(page_title="UK Labour Market Dependencies Dashboard", layout=
 st.title("UK Labour Market Dependencies Dashboard")
 st.caption("Explore the Causal Loop Diagram, industry sector clusters, summary statistics, and PCA visualisation.")
 
-KUMU_URL = "https://embed.kumu.io/3f568e13ef2bb7522bdb8baf3a349991"
+KUMU_URL = "https://embed.kumu.io/3b21f59a42a0ea30e5dda4662cf3897a"
 
 # TABS
 
