@@ -1,0 +1,20 @@
+industry,sic_code,cluster_label,pc1,pc2
+"Agriculture, Forestry and Fishing",A,2,3.0656910174384997,-0.15288300468786029
+Mining and Quarrying,B,1,-1.0988137398255378,2.448091340066626
+Manufacturing,C,0,0.23246270402372382,-0.8636037646777165
+"Electricity, gas, steam and air conditioning supply",D,1,-1.26352996088201,2.4367554362657606
+"Water supply, sewerage, waste management and remediation activities",E,3,-3.088523757464081,-0.882214446703302
+Construction,F,5,0.1835761459748743,-0.058230983396709526
+Wholesale and retail trade; repair of motor vehicles and motorcycles,G,0,0.05557425557677724,-1.1236734392250716
+Transportation and storage,H,0,-0.9140011309319848,-1.6299179361263845
+Accommodation and food service activities,I,6,1.6896253173897544,0.5316923741839055
+Information and communication,J,4,0.022036191369561774,0.6355362421080061
+Financial and insurance activities,K,1,-1.0889861103987268,1.5418915703508864
+Real estate activities,L,5,-0.10288535092896682,-0.5692824393587619
+"Professional, scientific and technical activities",M,4,-0.3281717555432342,0.688288045796111
+Administrative and support service activities,N,0,1.0372901237084513,-1.4358951652758771
+Public administration and defence; compulsory social security,O,3,-2.5584217955843718,-0.8645526167675597
+Education,P,5,1.0252713025258617,-0.062049873174473115
+Human health and social work activities,Q,2,2.8677797327198546,0.9060569520329991
+"Arts, entertainment and recreation",R,5,-0.22284879905215013,-1.023715473996194
+Other service activities,S,4,0.48687560988370643,-0.5222928174143865
