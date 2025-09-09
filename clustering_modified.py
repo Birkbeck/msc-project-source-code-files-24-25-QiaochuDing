@@ -207,14 +207,12 @@ for scen in multipliers['scenario'].dropna().unique():
 synthetic_all = pd.concat(synthetic_list, ignore_index=True)
 
 # Calculate baseline clusters
-
 baseline_scaled = scaler.transform(baseline[model_cols])
 baseline_clusters = kmeans.predict(baseline_scaled)
 
 baseline['cluster_label'] = baseline_clusters
 
 # Calculate distance and drift
-
 centroids = kmeans.cluster_centers_
 baseline_dists = cdist(baseline_scaled, centroids, metric='euclidean')
 baseline['dist_to_centroid'] = baseline_dists[np.arange(baseline_dists.shape[0]), baseline_clusters]
@@ -237,5 +235,4 @@ synthetic_all['drift'] = synthetic_all['dist_to_centroid'] - synthetic_all['base
 synthetic_all['cluster_changed'] = (synthetic_all['cluster_label'] != synthetic_all['baseline_cluster_label'])
 
 # Export to Excel
-
 synthetic_all.to_excel("synthetic_clusters_drift.xlsx", index=False)
