@@ -1,6 +1,7 @@
 # msc-project-source-code-files-24-25-QiaochuDing
 
-This GitHub repository contains the data and code files for Qiaochu Ding's MSc Data Science Project (2025) on **Integrating Systems Thinking and Machine Learning to Manage Migrant Dependencies in the UK Labour Market**.  
+This GitHub repository contains the data and code files for an MSc Data Science Project (2025) on **Integrating Systems Thinking and Machine Learning to Manage Migrant Dependencies in the UK Labour Market**.  
+
 An index of contents is listed below.
 
 ---
